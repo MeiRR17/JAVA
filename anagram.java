@@ -25,7 +25,7 @@ import java.util.Set;
  *   java anagram --groups words.txt
  *
  * Unicode letters and digits are compared case-insensitively after NFKC
- * normalization. Whitespace and punctuation are ignored; accents are kept.
+ * normalization. Whitespace and punctuation are ignored; Unicode vowel/combining marks are kept.
  */
 public final class anagram {
     private static final int MAX_LINE_CODEPOINTS = 512;
@@ -39,10 +39,13 @@ public final class anagram {
         if (text == null) {
             throw new IllegalArgumentException("Text cannot be null");
         }
-        String normalized = Normalizer.normalize(text, Normalizer.Form.NFKC)
-                .toLowerCase(Locale.ROOT);
+        String normalized = Normalizer.normalize(
+                Normalizer.normalize(text, Normalizer.Form.NFKC)
+                        .toLowerCase(Locale.ROOT), Normalizer.Form.NFKC);
         int[] letters = normalized.codePoints()
-                .filter(Character::isLetterOrDigit)
+                .filter(codePoint -> Character.isLetterOrDigit(codePoint)
+                        || Character.getType(codePoint) == Character.NON_SPACING_MARK
+                        || Character.getType(codePoint) == Character.COMBINING_SPACING_MARK)
                 .toArray();
         if (letters.length > MAX_LINE_CODEPOINTS) {
             throw new IllegalArgumentException("Text exceeds 512 letters or digits");
